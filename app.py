@@ -1,7 +1,18 @@
 import gradio as gr
+from fastai.vision.all import *
 
-def greet(name):
-    return "Hello " + name + "!!"
+learn = load_learner('model.pkl')
 
-demo = gr.Interface(fn=greet, inputs="text", outputs="text")
-demo.launch()
+labels = learn.dls.vocab
+def predict(img):
+    img = PILImage.create(img)
+    pred,pred_idx,probs = learn.predict(img)
+    return {labels[i]: float(probs[i] for i in range (len(labels)))}
+
+title = "Pet breed classifier"
+description = "A pet breed classifier trained on the Oxford Pets dataset with fastai"
+examples = ['cattledog.jpg']
+interpretation = 'default'
+enable_queue = True
+
+gr.Interface(fn=predict,inputs=gr.inputs.Image(shape=(512, 512)),outputs=gr.outputs.Label(num_top_classes=3),title=title,description=description,article=article,examples=examples,interpretation=interpretation,enable_queue=enable_queue).launch()
